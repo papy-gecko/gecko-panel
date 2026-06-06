@@ -20,7 +20,7 @@ class AppPanelProvider extends PanelProvider
                 'primary' => Color::hex('#5f906a'),
             ])
             ->viteTheme('resources/css/filament/app/theme.css')
-            ->favicon(asset('images/logo.png'))
+            ->favicon(asset('favicon.ico'))
             ->default()
             ->breadcrumbs(false)
             ->navigation(false)

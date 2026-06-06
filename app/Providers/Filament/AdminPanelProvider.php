@@ -23,7 +23,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::hex('#5f906a'),
             ])
             ->brandName(config('app.name', 'Gecko'))
-            ->favicon(asset('images/logo.png'))
+            ->favicon(asset('favicon.ico'))
             
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->path('admin')
