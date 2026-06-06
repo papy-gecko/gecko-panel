@@ -72,7 +72,9 @@ success "PHP 8.2 installé"
 # ── MySQL ──
 step "MySQL"
 apt-get install -y -q mysql-server
-mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASS}';"
+# Utilise debian.cnf pour le premier accès (auth socket Ubuntu/Debian)
+DEBIAN_CNF="/etc/mysql/debian.cnf"
+mysql --defaults-file="$DEBIAN_CNF" -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASS}'; FLUSH PRIVILEGES;"
 mysql -u root -p"${MYSQL_ROOT_PASS}" -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DB}\`;"
 mysql -u root -p"${MYSQL_ROOT_PASS}" -e "CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_PASS}';"
 mysql -u root -p"${MYSQL_ROOT_PASS}" -e "GRANT ALL PRIVILEGES ON \`${MYSQL_DB}\`.* TO '${MYSQL_USER}'@'localhost'; FLUSH PRIVILEGES;"
@@ -95,11 +97,16 @@ mkdir -p /var/www/gecko
 git clone https://github.com/papy-gecko/gecko-panel.git /var/www/gecko
 cd /var/www/gecko
 
+# Répertoires requis
+mkdir -p bootstrap/cache storage/logs storage/app storage/framework/{sessions,views,cache}
+chown -R www-data:www-data bootstrap/cache storage
+chmod -R 755 bootstrap/cache storage
+
 info "Dépendances PHP..."
 composer install --no-dev --optimize-autoloader --no-interaction -q
 
 info "Dépendances Node..."
-npm install --silent
+npm install --legacy-peer-deps --silent
 
 info "Build assets..."
 npm run build --silent
@@ -108,10 +115,11 @@ info "Configuration .env..."
 cp .env.example .env 2>/dev/null || cp .env.example.dist .env 2>/dev/null || touch .env
 php artisan key:generate --force
 
-APP_KEY=$(grep APP_KEY .env | cut -d= -f2-)
+APP_KEY=$(grep "^APP_KEY=" .env | cut -d= -f2-)
 
-cat > .env << ENVEOF
-APP_NAME="Gecko"
+# Écrire le .env via Python pour éviter les problèmes d'échappement avec la clé base64
+python3 -c "
+content = '''APP_NAME=\"Gecko\"
 APP_ENV=production
 APP_KEY=${APP_KEY}
 APP_DEBUG=false
@@ -137,7 +145,9 @@ MYSQL_PORT=3306
 MYSQL_DATABASE=mysql
 MYSQL_USERNAME=${MYSQL_USER}
 MYSQL_PASSWORD=${MYSQL_PASS}
-ENVEOF
+'''
+open('/var/www/gecko/.env', 'w').write(content)
+"
 
 info "Migrations..."
 php artisan migrate --force
@@ -147,8 +157,6 @@ info "Création compte admin..."
 php artisan p:user:make \
     --email="$ADMIN_EMAIL" \
     --username="$ADMIN_USER" \
-    --name-first="Admin" \
-    --name-last="Gecko" \
     --password="$ADMIN_PASS" \
     --admin=1 2>/dev/null || true
 
@@ -176,6 +184,7 @@ NGINXEOF
 
 ln -sf /etc/nginx/sites-available/gecko /etc/nginx/sites-enabled/gecko
 rm -f /etc/nginx/sites-enabled/default
+systemctl start php8.2-fpm
 nginx -t && systemctl reload nginx
 
 certbot certonly --nginx -d "$DOMAIN" --email "$ADMIN_EMAIL" --agree-tos --non-interactive
