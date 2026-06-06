@@ -1,0 +1,54 @@
+@import 'tailwindcss';
+
+/* Required by all components */
+@import '../../vendor/filament/support/resources/css/index.css';
+
+/* Required by actions and tables */
+@import '../../vendor/filament/actions/resources/css/index.css';
+
+/* Required by actions, forms and tables */
+@import '../../vendor/filament/forms/resources/css/index.css';
+
+/* Required by actions and infolists */
+@import '../../vendor/filament/infolists/resources/css/index.css';
+
+/* Required by notifications */
+@import '../../vendor/filament/notifications/resources/css/index.css';
+
+/* Required by actions, infolists, forms, schemas and tables */
+@import '../../vendor/filament/schemas/resources/css/index.css';
+
+/* Required by tables */
+@import '../../vendor/filament/tables/resources/css/index.css';
+
+/* Required by widgets */
+@import '../../vendor/filament/widgets/resources/css/index.css';
+
+@source '../../vendor/gboquizosanchez/filament-log-viewer/resources/views/**/*.blade.php';
+
+@variant dark (&:where(.dark, .dark *));
+
+/* ── CUSTOM THEME ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    --c-accent: #7fdb4f;
+    --c-accent-dim: #1a3008;
+    --c-accent-border: #3d6620;
+}
+
+.dark .fi-sidebar { background: #111111 !important; border-right: 1px solid #222 !important; }
+.dark .fi-topbar { background: #111111 !important; border-bottom: 1px solid #222 !important; }
+.dark .fi-main { background: #0a0a0a !important; }
+.dark .fi-ta-table { background: #111111 !important; border: 1px solid #222 !important; }
+.dark .fi-ta-row:hover { background: #161616 !important; }
+.dark .fi-ta-header-cell { background: #161616 !important; color: #444 !important; font-size: 11px !important; letter-spacing: 1px !important; text-transform: uppercase !important; }
+.dark .fi-section { background: #111111 !important; border: 1px solid #222 !important; }
+.dark .fi-modal-window { background: #111111 !important; border: 1px solid #2a2a2a !important; }
+.dark .fi-input, .dark .fi-select-input { background: #0a0a0a !important; border-color: #2a2a2a !important; }
+.dark .fi-btn-color-primary { background: #1a3008 !important; color: #7fdb4f !important; border-color: #3d6620 !important; }
+.dark .fi-sidebar-item-button.fi-active { background: #1a3008 !important; color: #7fdb4f !important; }
+.dark .fi-sidebar-item-button:hover { background: rgba(255,255,255,.04) !important; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+* { font-family: 'Inter', sans-serif !important; }

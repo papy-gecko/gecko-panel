@@ -1,0 +1,57 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root { --font-family: 'Inter', sans-serif; }
+* { font-family: 'Inter', sans-serif !important; }
+code, pre, .mono { font-family: 'JetBrains Mono', monospace !important; }
+
+/* Sidebar — léger tint vert foncé pour se démarquer de Pelican */
+.dark .fi-sidebar {
+    background: #080f09 !important;
+    border-right: 1px solid #1a2e1b !important;
+}
+.dark .fi-topbar {
+    background: #080f09 !important;
+    border-bottom: 1px solid #1a2e1b !important;
+}
+
+/* Item actif — liseré or */
+.dark .fi-sidebar-item.fi-active .fi-sidebar-item-btn {
+    border-left: 2px solid #76673e !important;
+}
+
+/* Group labels plus visibles */
+.dark .fi-sidebar-group-label {
+    color: #2a4a2d !important;
+    letter-spacing: 1.2px !important;
+    font-size: 10px !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: #1a2e1b; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #5f906a; }
+
+/* Variables terminaux/cockpit */
+:root {
+    --c-bg: #080808;
+    --c-surface: #0f0f0f;
+    --c-surface2: #141414;
+    --c-border: #1a1a1a;
+    --c-border2: #222222;
+    --c-text: #cccccc;
+    --c-text2: #888888;
+    --c-text3: #333333;
+    --c-accent: #80c0a0;
+    --c-accent-dim: #1a2e1b;
+    --c-accent-border: #5f906a;
+    --c-blue: #5599cc;
+    --c-blue-dim: #081420;
+    --c-warn: #c4aa6a;
+    --c-danger: #cc3333;
+    --c-danger-dim: #1a0808;
+}

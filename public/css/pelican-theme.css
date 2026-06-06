@@ -1,0 +1,408 @@
+/* ═══════════════════════════════════════════════════════════
+   CUSTOM PELICAN THEME — Dark/Light
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── DARK THEME (default) ── */
+:root, .dark {
+    --c-bg: #0a0a0a;
+    --c-surface: #111111;
+    --c-surface2: #161616;
+    --c-border: #222222;
+    --c-border2: #2a2a2a;
+    --c-text: #d4d4d4;
+    --c-text2: #888888;
+    --c-text3: #444444;
+    --c-accent: #7fdb4f;
+    --c-accent-dim: #1a3008;
+    --c-accent-border: #3d6620;
+    --c-blue: #5599cc;
+    --c-blue-dim: #081420;
+    --c-warn: #cc7700;
+    --c-danger: #cc3333;
+    --c-danger-dim: #1a0808;
+    --radius: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,.5);
+}
+
+/* ── LIGHT THEME ── */
+.light, :root.light {
+    --c-bg: #f5f5f5;
+    --c-surface: #ffffff;
+    --c-surface2: #f9f9f9;
+    --c-border: #e5e5e5;
+    --c-border2: #d4d4d4;
+    --c-text: #171717;
+    --c-text2: #666666;
+    --c-text3: #aaaaaa;
+    --c-accent: #4a9e1f;
+    --c-accent-dim: #edf7e6;
+    --c-accent-border: #7fdb4f;
+    --c-blue: #2563eb;
+    --c-blue-dim: #eff6ff;
+    --c-warn: #d97706;
+    --c-danger: #dc2626;
+    --c-danger-dim: #fef2f2;
+    --shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+
+/* ── BASE ── */
+* { font-family: 'Inter', sans-serif !important; }
+.mono, code, pre { font-family: 'JetBrains Mono', monospace !important; }
+
+body {
+    background: var(--c-bg) !important;
+    color: var(--c-text) !important;
+}
+
+/* ── SIDEBAR ── */
+.fi-sidebar {
+    background: var(--c-surface) !important;
+    border-right: 1px solid var(--c-border) !important;
+}
+
+.fi-sidebar-nav-groups {
+    padding: 8px 0 !important;
+}
+
+/* Nav items */
+.fi-sidebar-item-button {
+    border-radius: var(--radius) !important;
+    margin: 1px 8px !important;
+    padding: 8px 10px !important;
+    color: var(--c-text3) !important;
+    transition: all .15s !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.fi-sidebar-item-button:hover {
+    background: rgba(255,255,255,.05) !important;
+    color: var(--c-text) !important;
+}
+
+.fi-sidebar-item-button.fi-active {
+    background: var(--c-accent-dim) !important;
+    color: var(--c-accent) !important;
+    border-left: 2px solid var(--c-accent) !important;
+}
+
+.light .fi-sidebar-item-button:hover {
+    background: rgba(0,0,0,.05) !important;
+}
+
+.light .fi-sidebar-item-button.fi-active {
+    background: var(--c-accent-dim) !important;
+    color: var(--c-accent) !important;
+}
+
+/* Nav group labels */
+.fi-sidebar-group-label {
+    font-size: 10px !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
+    color: var(--c-text3) !important;
+    padding: 8px 18px 4px !important;
+    font-weight: 600 !important;
+}
+
+/* ── TOPBAR ── */
+.fi-topbar {
+    background: var(--c-surface) !important;
+    border-bottom: 1px solid var(--c-border) !important;
+    box-shadow: none !important;
+}
+
+/* ── MAIN CONTENT ── */
+.fi-main {
+    background: var(--c-bg) !important;
+}
+
+.fi-page {
+    background: var(--c-bg) !important;
+}
+
+/* ── CARDS / WIDGETS ── */
+.fi-wi-stats-overview-stat,
+.fi-section,
+.fi-card {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow) !important;
+}
+
+/* ── TABLES ── */
+.fi-ta-table {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border) !important;
+    border-radius: var(--radius) !important;
+    overflow: hidden !important;
+}
+
+.fi-ta-header-cell {
+    background: var(--c-surface2) !important;
+    color: var(--c-text3) !important;
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+    border-bottom: 1px solid var(--c-border) !important;
+}
+
+.fi-ta-row {
+    border-bottom: 1px solid var(--c-border) !important;
+    transition: background .1s !important;
+}
+
+.fi-ta-row:hover {
+    background: var(--c-surface2) !important;
+}
+
+.fi-ta-cell {
+    color: var(--c-text) !important;
+    font-size: 13px !important;
+}
+
+/* ── BUTTONS ── */
+.fi-btn {
+    border-radius: var(--radius) !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    transition: all .15s !important;
+}
+
+.fi-btn-color-primary {
+    background: var(--c-accent-dim) !important;
+    color: var(--c-accent) !important;
+    border: 1px solid var(--c-accent-border) !important;
+}
+
+.fi-btn-color-primary:hover {
+    filter: brightness(1.2) !important;
+}
+
+.fi-btn-color-danger {
+    background: var(--c-danger-dim) !important;
+    color: var(--c-danger) !important;
+    border: 1px solid var(--c-danger) !important;
+}
+
+/* ── FORMS ── */
+.fi-input,
+.fi-select-input,
+.fi-textarea {
+    background: var(--c-bg) !important;
+    border: 1px solid var(--c-border2) !important;
+    color: var(--c-text) !important;
+    border-radius: var(--radius) !important;
+    font-size: 13px !important;
+}
+
+.fi-input:focus,
+.fi-select-input:focus,
+.fi-textarea:focus {
+    border-color: var(--c-accent) !important;
+    box-shadow: 0 0 0 2px var(--c-accent-dim) !important;
+    outline: none !important;
+}
+
+.fi-input::placeholder { color: var(--c-text3) !important; }
+
+.fi-fo-field-wrp-label {
+    color: var(--c-text2) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+/* ── BADGES / PILLS ── */
+.fi-badge {
+    border-radius: 4px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: .3px !important;
+}
+
+.fi-badge-color-success {
+    background: var(--c-accent-dim) !important;
+    color: var(--c-accent) !important;
+    border: 1px solid var(--c-accent-border) !important;
+}
+
+.fi-badge-color-danger {
+    background: var(--c-danger-dim) !important;
+    color: var(--c-danger) !important;
+}
+
+.fi-badge-color-warning {
+    background: #1a1000 !important;
+    color: var(--c-warn) !important;
+    border: 1px solid #4a3000 !important;
+}
+
+.light .fi-badge-color-warning {
+    background: #fffbeb !important;
+    color: var(--c-warn) !important;
+}
+
+/* ── MODALS ── */
+.fi-modal-window {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border2) !important;
+    border-radius: calc(var(--radius) * 2) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5) !important;
+}
+
+.fi-modal-header {
+    border-bottom: 1px solid var(--c-border) !important;
+}
+
+.fi-modal-footer {
+    border-top: 1px solid var(--c-border) !important;
+    background: var(--c-surface2) !important;
+}
+
+/* ── NOTIFICATIONS ── */
+.fi-no-notification {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border2) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4) !important;
+}
+
+/* ── DROPDOWN ── */
+.fi-dropdown-panel {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border2) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4) !important;
+}
+
+.fi-dropdown-item {
+    color: var(--c-text) !important;
+    font-size: 13px !important;
+    border-radius: 4px !important;
+    margin: 2px 4px !important;
+}
+
+.fi-dropdown-item:hover {
+    background: var(--c-surface2) !important;
+}
+
+/* ── STATS WIDGETS ── */
+.fi-wi-stats-overview-stat-value {
+    color: var(--c-text) !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 24px !important;
+    font-weight: 700 !important;
+}
+
+.fi-wi-stats-overview-stat-label {
+    color: var(--c-text3) !important;
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+}
+
+/* ── LOGIN PAGE ── */
+.fi-simple-main {
+    background: var(--c-bg) !important;
+}
+
+.fi-simple-layout {
+    background: var(--c-bg) !important;
+}
+
+/* Login card */
+.fi-simple-page {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border) !important;
+    border-radius: calc(var(--radius) * 2) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5) !important;
+}
+
+/* ── SCROLLBARS ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--c-border2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-text3); }
+
+/* ── THEME TOGGLE BUTTON ── */
+#theme-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border2);
+    color: var(--c-text2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all .2s;
+    box-shadow: var(--shadow);
+}
+
+#theme-toggle:hover {
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+    transform: scale(1.1);
+}
+
+/* ── MISC ── */
+.fi-section-header-heading {
+    color: var(--c-text) !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+}
+
+.fi-breadcrumbs-item {
+    color: var(--c-text3) !important;
+    font-size: 12px !important;
+}
+
+/* Tabs */
+.fi-tabs-tab {
+    color: var(--c-text3) !important;
+    border-bottom: 2px solid transparent !important;
+    font-weight: 500 !important;
+}
+
+.fi-tabs-tab[aria-selected="true"] {
+    color: var(--c-text) !important;
+    border-bottom-color: var(--c-accent) !important;
+}
+
+/* Pagination */
+.fi-pagination-nav-btn {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border) !important;
+    color: var(--c-text) !important;
+    border-radius: var(--radius) !important;
+}
+
+.fi-pagination-nav-btn:hover {
+    border-color: var(--c-accent) !important;
+    color: var(--c-accent) !important;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--c-text) !important;
+}
+
+/* Links */
+a {
+    color: var(--c-accent) !important;
+}
+
+a:hover {
+    color: var(--c-accent) !important;
+    filter: brightness(1.2) !important;
+}
