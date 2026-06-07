@@ -264,7 +264,11 @@ systemctl enable --now gecko-queue
 success "Queue worker démarré"
 
 # ── Cron ──
-(crontab -l 2>/dev/null; echo "* * * * * php /var/www/gecko/artisan schedule:run >> /dev/null 2>&1") | crontab -
+# Important : exécuter la tâche planifiée en tant que www-data, PAS root.
+# Sinon `artisan schedule:run` crée des fichiers/dossiers de cache appartenant
+# à root sous storage/framework/cache/data/, que le serveur web (www-data) ne
+# peut plus écrire ensuite -> erreurs "Failed to open stream" dans le panel.
+(crontab -u www-data -l 2>/dev/null; echo "* * * * * php /var/www/gecko/artisan schedule:run >> /dev/null 2>&1") | crontab -u www-data -
 success "Cron configuré"
 
 # ── Docker ──
