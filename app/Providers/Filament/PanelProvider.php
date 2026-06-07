@@ -19,6 +19,7 @@ use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Support\HtmlString;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -34,8 +35,19 @@ abstract class PanelProvider extends BasePanelProvider
             ])
             ->databaseNotifications()
             ->brandName(config('app.name', 'Gecko'))
-            ->brandLogo(config('app.logo'))
-            ->brandLogoHeight('2rem')
+            // Filament hides the text brand name whenever a logo image is
+            // set (the name becomes alt text only), so the logo is rendered
+            // here as HTML alongside the visible title rather than through
+            // ->brandLogo(), which would silently drop the "Gecko" text.
+            ->brandLogo(fn () => config('app.logo')
+                ? new HtmlString(sprintf(
+                    '<div class="flex items-center gap-2"><img src="%s" alt="%s" class="h-9 w-auto" /><span class="text-xl font-bold">%s</span></div>',
+                    e(config('app.logo')),
+                    e(config('app.name', 'Gecko')),
+                    e(config('app.name', 'Gecko')),
+                ))
+                : null)
+            ->brandLogoHeight('2.25rem')
             ->favicon(config('app.favicon', '/favicon.ico'))
             ->renderHook('panels::head.end', fn () => '<script src="/js/pelican-theme.js"></script>')
             ->topNavigation(function () {
