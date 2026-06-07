@@ -41,7 +41,7 @@ abstract class PanelProvider extends BasePanelProvider
             // ->brandLogo(), which would silently drop the "Gecko" text.
             ->brandLogo(fn () => config('app.logo')
                 ? new HtmlString(sprintf(
-                    '<div class="flex items-center gap-2"><img src="%s" alt="%s" class="h-24 w-auto" /><span class="text-xl font-bold">%s</span></div>',
+                    '<div class="flex items-center gap-2"><img src="%s" alt="%s" class="h-9 w-auto" /><span class="text-xl font-bold">%s</span></div>',
                     e(config('app.logo')),
                     e(config('app.name', 'Gecko')),
                     e(config('app.name', 'Gecko')),
