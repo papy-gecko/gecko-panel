@@ -23,8 +23,22 @@ class DatabaseStep
         'pgsql' => 'PostgreSQL',
     ];
 
+    /**
+     * Reads the current connection config (i.e. whatever install.sh already
+     * wrote into .env) so the form starts pre-filled instead of forcing the
+     * user to re-type values the installer script already generated.
+     */
+    private static function currentConnectionConfig(): array
+    {
+        $driver = config('database.default');
+
+        return config("database.connections.{$driver}", []);
+    }
+
     public static function make(PanelInstaller $installer): Step
     {
+        $current = self::currentConnectionConfig();
+
         return Step::make('database')
             ->label(trans('installer.database.title'))
             ->columns()
@@ -65,13 +79,14 @@ class DatabaseStep
                     ->placeholder(fn (Get $get) => $get('env_database.DB_CONNECTION') === 'sqlite' ? 'database.sqlite' : 'panel')
                     ->hintIcon(TablerIcon::QuestionMark, fn (Get $get) => $get('env_database.DB_CONNECTION') === 'sqlite' ? trans('installer.database.fields.path_help') : trans('installer.database.fields.name_help'))
                     ->required()
-                    ->default('database.sqlite'),
+                    ->default($current['database'] ?? 'database.sqlite'),
                 TextInput::make('env_database.DB_HOST')
                     ->label(trans('installer.database.fields.host'))
                     ->placeholder('127.0.0.1')
                     ->hintIcon(TablerIcon::QuestionMark, trans('installer.database.fields.host_help'))
                     ->required(fn (Get $get) => $get('env_database.DB_CONNECTION') !== 'sqlite')
-                    ->hidden(fn (Get $get) => $get('env_database.DB_CONNECTION') === 'sqlite'),
+                    ->hidden(fn (Get $get) => $get('env_database.DB_CONNECTION') === 'sqlite')
+                    ->default($current['host'] ?? '127.0.0.1'),
                 TextInput::make('env_database.DB_PORT')
                     ->label(trans('installer.database.fields.port'))
                     ->placeholder('3306')
@@ -80,19 +95,22 @@ class DatabaseStep
                     ->minValue(1)
                     ->maxValue(65535)
                     ->required(fn (Get $get) => $get('env_database.DB_CONNECTION') !== 'sqlite')
-                    ->hidden(fn (Get $get) => $get('env_database.DB_CONNECTION') === 'sqlite'),
+                    ->hidden(fn (Get $get) => $get('env_database.DB_CONNECTION') === 'sqlite')
+                    ->default($current['port'] ?? '3306'),
                 TextInput::make('env_database.DB_USERNAME')
                     ->label(trans('installer.database.fields.username'))
                     ->placeholder('pelican')
                     ->hintIcon(TablerIcon::QuestionMark, trans('installer.database.fields.username_help'))
                     ->required(fn (Get $get) => $get('env_database.DB_CONNECTION') !== 'sqlite')
-                    ->hidden(fn (Get $get) => $get('env_database.DB_CONNECTION') === 'sqlite'),
+                    ->hidden(fn (Get $get) => $get('env_database.DB_CONNECTION') === 'sqlite')
+                    ->default($current['username'] ?? null),
                 TextInput::make('env_database.DB_PASSWORD')
                     ->label(trans('installer.database.fields.password'))
                     ->hintIcon(TablerIcon::QuestionMark, trans('installer.database.fields.password_help'))
                     ->password()
                     ->revealable()
-                    ->hidden(fn (Get $get) => $get('env_database.DB_CONNECTION') === 'sqlite'),
+                    ->hidden(fn (Get $get) => $get('env_database.DB_CONNECTION') === 'sqlite')
+                    ->default($current['password'] ?? null),
             ])
             ->afterValidation(function (Get $get) use ($installer) {
                 $driver = $get('env_database.DB_CONNECTION');
