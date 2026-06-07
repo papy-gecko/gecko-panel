@@ -172,8 +172,10 @@ NGINXEOF
 
 ln -sf /etc/nginx/sites-available/gecko /etc/nginx/sites-enabled/gecko
 rm -f /etc/nginx/sites-enabled/default
-systemctl start php8.2-fpm
-nginx -t && systemctl reload nginx
+systemctl enable --now php8.2-fpm
+# enable --now plutôt que reload : nginx peut être installé mais arrêté
+# (ex: relance du script sur un serveur déjà préparé), reload échouerait alors.
+nginx -t && systemctl enable --now nginx && systemctl reload nginx
 
 certbot certonly --nginx -d "$DOMAIN" --register-unsafely-without-email --agree-tos --non-interactive
 success "SSL obtenu"
