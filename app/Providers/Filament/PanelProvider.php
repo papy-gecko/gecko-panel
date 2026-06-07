@@ -41,7 +41,12 @@ abstract class PanelProvider extends BasePanelProvider
             // ->brandLogo(), which would silently drop the "Gecko" text.
             ->brandLogo(fn () => config('app.logo')
                 ? new HtmlString(sprintf(
-                    '<div class="flex items-center gap-2"><img src="%s" alt="%s" class="h-9 w-auto" /><span class="text-xl font-bold">%s</span></div>',
+                    // Inline styles (not Tailwind utility classes) are used here
+                    // because this HTML is built from a PHP string and never
+                    // scanned by Tailwind's JIT compiler — classes like `h-9`
+                    // would be purged from the compiled CSS and silently do
+                    // nothing, leaving the logo at its native (huge) size.
+                    '<div style="display:flex;align-items:center;gap:0.5rem"><img src="%s" alt="%s" style="height:2.25rem;width:auto" /><span style="font-size:1.25rem;line-height:1.75rem;font-weight:700">%s</span></div>',
                     e(config('app.logo')),
                     e(config('app.name', 'Gecko')),
                     e(config('app.name', 'Gecko')),
