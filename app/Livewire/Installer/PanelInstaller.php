@@ -14,7 +14,6 @@ use App\Traits\EnvironmentWriterTrait;
 use App\Traits\Filament\CanCustomizeSteps;
 use Exception;
 use Filament\Actions\Action;
-use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -162,8 +161,10 @@ class PanelInstaller extends SimplePage implements HasForms
                 'APP_INSTALLED' => 'true',
             ]);
 
-            // Redirect to admin panel
-            $this->redirect(Filament::getPanel('admin')->getUrl());
+            // Redirect to the panel's home (domain root) rather than straight
+            // into /admin: the user is now logged in, and the app panel's
+            // own navigation gets them to the admin panel if they need it.
+            $this->redirect(url('/'));
         } catch (Halt) {
         }
     }
