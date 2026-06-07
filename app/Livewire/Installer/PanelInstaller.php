@@ -6,6 +6,7 @@ use App\Enums\TablerIcon;
 use App\Livewire\Installer\Steps\DatabaseStep;
 use App\Livewire\Installer\Steps\EnvironmentStep;
 use App\Livewire\Installer\Steps\RequirementsStep;
+use App\Livewire\Installer\Steps\SshSecurityStep;
 use App\Models\User;
 use App\Services\Helpers\LanguageService;
 use App\Services\Users\UserCreationService;
@@ -30,6 +31,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
+use Symfony\Component\Process\Process;
 
 /**
  * @property Schema $form
@@ -110,6 +112,7 @@ class PanelInstaller extends SimplePage implements HasForms
             RequirementsStep::make(),
             EnvironmentStep::make($this),
             DatabaseStep::make($this),
+            SshSecurityStep::make($this),
         ];
     }
 
@@ -239,6 +242,60 @@ class PanelInstaller extends SimplePage implements HasForms
 
             throw new Halt(trans('installer.exceptions.create_user'));
         }
+    }
+
+    /**
+     * Sécurise l'accès SSH du serveur : génère une paire de clés dédiée,
+     * bascule sshd sur un port personnalisé et coupe l'authentification par
+     * mot de passe. Délègue à bin/ssh-setup.sh (lancé via sudo, voir
+     * /etc/sudoers.d/gecko-ssh-setup) car ces opérations nécessitent root —
+     * www-data ne peut exécuter QUE ce script précis, rien d'autre.
+     *
+     * @return array{port: int, private_key: string, bat: string}
+     *
+     * @throws Exception
+     */
+    public function hardenSsh(int $port): array
+    {
+        $sshUser = config('app.ssh_harden_user');
+        $outDir = storage_path('app/ssh-setup');
+        $script = base_path('bin/ssh-setup.sh');
+
+        $process = new Process(['sudo', $script, $sshUser, (string) $port, $outDir]);
+        $process->setTimeout(120);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            throw new Exception(trim($process->getErrorOutput()) ?: trim($process->getOutput()));
+        }
+
+        $keyPath = trim($process->getOutput());
+        $privateKey = file_get_contents($keyPath);
+
+        if ($privateKey === false) {
+            throw new Exception("Clé générée introuvable : {$keyPath}");
+        }
+
+        // La clé privée ne doit pas rester sur le disque du serveur une fois
+        // affichée à l'utilisateur : il doit la sauvegarder lui-même.
+        @unlink($keyPath);
+        @unlink($keyPath . '.pub');
+
+        $host = parse_url(config('app.url'), PHP_URL_HOST) ?: request()->getHost();
+        $keyFileName = 'gecko_id_ed25519';
+
+        $bat = implode("\r\n", [
+            '@echo off',
+            sprintf('title Connexion SSH - %s', $host),
+            sprintf('ssh -i %%~dp0%s -p %d %s@%s', $keyFileName, $port, $sshUser, $host),
+            'pause',
+        ]);
+
+        return [
+            'port' => $port,
+            'private_key' => $privateKey,
+            'bat' => $bat,
+        ];
     }
 
 }

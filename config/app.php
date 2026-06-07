@@ -3,6 +3,7 @@
 return [
 
     'name' => env('APP_NAME', 'Pelican'),
+    'ssh_harden_user' => env('SSH_HARDEN_USER', 'debian'),
     'logo' => env('APP_LOGO', '/gecko.png'),
     'favicon' => env('APP_FAVICON', '/pelican.ico'),
 

@@ -23,6 +23,23 @@ return [
         ],
         'exception' => 'Some requirements are missing',
     ],
+    'ssh_security' => [
+        'title' => 'SSH Security',
+        'fields' => [
+            'enabled' => 'Secure SSH access',
+            'enabled_help' => 'Generates a dedicated SSH key, switches to a custom port and disables password authentication. The default port 22 is the #1 target of automated bots — switching away from it greatly reduces your exposure.',
+            'port' => 'New SSH port',
+            'port_help' => 'Pick a port between 1024 and 65535. The switch is done safely: the new port is opened and tested before the old one is ever closed, so you cannot be locked out.',
+            'private_key' => 'Private key',
+            'private_key_help' => 'Copy this into a file (e.g. gecko_id_ed25519) — it will not be shown again and has been removed from the server.',
+            'bat' => 'Connection shortcut (.bat)',
+            'bat_help' => 'Copy this into a file named after your server (e.g. gecko-server.bat) and place it next to your private key — double-click it to connect.',
+        ],
+        'success' => 'SSH secured on port :port. Save the key and shortcut below before continuing.',
+        'exceptions' => [
+            'failed' => 'Could not secure SSH automatically',
+        ],
+    ],
     'environment' => [
         'title' => 'Environment',
         'fields' => [

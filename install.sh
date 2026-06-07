@@ -140,6 +140,11 @@ CACHE_STORE=file
 SESSION_DRIVER=file
 QUEUE_CONNECTION=sync
 
+# Utilisateur SSH autorisé pour l'assistant de sécurisation de l'accès SSH
+# (voir /installer — étape "Sécurité SSH"). Doit correspondre à l'utilisateur
+# déclaré dans /etc/sudoers.d/gecko-ssh-setup, sous peine de refus par sudo.
+SSH_HARDEN_USER=${SUDO_USER:-debian}
+
 MYSQL_HOST=127.0.0.1
 MYSQL_PORT=3306
 MYSQL_DATABASE=mysql
@@ -152,6 +157,23 @@ open('/var/www/gecko/.env', 'w').write(content)
 chown -R www-data:www-data /var/www/gecko
 chmod -R 755 /var/www/gecko/storage /var/www/gecko/bootstrap/cache
 success "Panel installé (configuration finale via l'assistant web)"
+
+# ── Autorisation pour l'assistant de sécurisation SSH ──
+# L'assistant web (exécuté en www-data) propose de générer une clé SSH dédiée,
+# de changer le port d'écoute et de couper l'authentification par mot de passe.
+# Ces opérations nécessitent root : on autorise www-data à lancer UNIQUEMENT le
+# script bin/ssh-setup.sh sans mot de passe, plutôt que d'ouvrir un accès sudo
+# large qui élargirait inutilement la surface d'attaque du panel.
+step "Autorisation de l'assistant SSH"
+chmod 750 /var/www/gecko/bin/ssh-setup.sh
+chown root:www-data /var/www/gecko/bin/ssh-setup.sh
+SSH_SETUP_USER="${SUDO_USER:-debian}"
+cat > /etc/sudoers.d/gecko-ssh-setup << SUDOEOF
+www-data ALL=(root) NOPASSWD: /var/www/gecko/bin/ssh-setup.sh ${SSH_SETUP_USER} *
+SUDOEOF
+chmod 440 /etc/sudoers.d/gecko-ssh-setup
+visudo -cf /etc/sudoers.d/gecko-ssh-setup || error "fichier sudoers invalide pour l'assistant SSH"
+success "Assistant de sécurisation SSH autorisé pour l'utilisateur '${SSH_SETUP_USER}'"
 
 # ── SSL d'abord (sans HTTPS dans nginx) ──
 step "Certificat SSL"
