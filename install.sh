@@ -34,11 +34,11 @@ echo ""
 [[ "$ID" != "debian" && "$ID" != "ubuntu" ]] && error "Debian/Ubuntu uniquement."
 
 # ── Infos ──
+# Le strict minimum est demandé ici. Tout le reste (compte admin, base de
+# données, cache, queue, sessions...) se configure ensuite depuis le
+# navigateur via l'assistant d'installation intégré au panel (/installer).
 step "Configuration"
-read -p "Domaine du panel (ex: panel.monserveur.fr) : " DOMAIN
-read -p "Email admin : " ADMIN_EMAIL
-read -p "Nom d'utilisateur admin : " ADMIN_USER
-read -s -p "Mot de passe admin : " ADMIN_PASS; echo
+read -p "Domaine du panel (ex: panel.monserveur.fr) — le DNS doit déjà pointer vers ce serveur : " DOMAIN
 
 MYSQL_USER="gecko"
 MYSQL_DB="gecko_panel"
@@ -46,9 +46,8 @@ MYSQL_PASS=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 24)
 MYSQL_ROOT_PASS=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 24)
 
 echo ""
-info "Domaine    : $DOMAIN"
-info "Email      : $ADMIN_EMAIL"
-info "User admin : $ADMIN_USER"
+info "Domaine : $DOMAIN"
+info "Le compte admin et la base de données seront configurés via l'assistant web après l'installation."
 read -p "Continuer ? [o/N] : " CONFIRM
 [[ "$CONFIRM" != "o" && "$CONFIRM" != "O" ]] && exit 0
 
@@ -56,12 +55,12 @@ read -p "Continuer ? [o/N] : " CONFIRM
 step "Mise à jour système"
 apt-get update -q && apt-get upgrade -y -q
 apt-get install -y -q curl wget git unzip tar nginx certbot python3-certbot-nginx \
-    software-properties-common apt-transport-https ca-certificates gnupg2
+    cron apt-transport-https ca-certificates gnupg2
 success "Système mis à jour"
 
 # ── PHP 8.2 ──
 step "PHP 8.2"
-curl -sSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/sury-php.gpg
+curl -sSL https://packages.sury.org/php/apt.gpg | gpg --batch --yes --dearmor -o /usr/share/keyrings/sury-php.gpg
 echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-php.list
 apt-get update -q
 apt-get install -y -q php8.2 php8.2-fpm php8.2-cli php8.2-mysql php8.2-sqlite3 \
@@ -71,10 +70,10 @@ success "PHP 8.2 installé"
 
 # ── MySQL ──
 step "MySQL"
-apt-get install -y -q mysql-server
+apt-get install -y -q mariadb-server
 # Utilise debian.cnf pour le premier accès (auth socket Ubuntu/Debian)
 DEBIAN_CNF="/etc/mysql/debian.cnf"
-mysql --defaults-file="$DEBIAN_CNF" -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_ROOT_PASS}'; FLUSH PRIVILEGES;"
+mysql --defaults-file="$DEBIAN_CNF" -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASS}'; FLUSH PRIVILEGES;"
 mysql -u root -p"${MYSQL_ROOT_PASS}" -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DB}\`;"
 mysql -u root -p"${MYSQL_ROOT_PASS}" -e "CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_PASS}';"
 mysql -u root -p"${MYSQL_ROOT_PASS}" -e "GRANT ALL PRIVILEGES ON \`${MYSQL_DB}\`.* TO '${MYSQL_USER}'@'localhost'; FLUSH PRIVILEGES;"
@@ -112,12 +111,12 @@ info "Build assets..."
 npm run build --silent
 
 info "Configuration .env..."
-cp .env.example .env 2>/dev/null || cp .env.example.dist .env 2>/dev/null || touch .env
-php artisan key:generate --force
-
-APP_KEY=$(grep "^APP_KEY=" .env | cut -d= -f2-)
+APP_KEY=$(php artisan key:generate --show)
 
 # Écrire le .env via Python pour éviter les problèmes d'échappement avec la clé base64
+# APP_INSTALLED=false ouvre l'assistant web (/installer) au premier accès :
+# c'est lui qui configurera le compte admin, la base de données, le cache,
+# la queue et les sessions — plus besoin de tout saisir en SSH.
 python3 -c "
 content = '''APP_NAME=\"Gecko\"
 APP_ENV=production
@@ -125,6 +124,7 @@ APP_KEY=${APP_KEY}
 APP_DEBUG=false
 APP_URL=https://${DOMAIN}
 APP_FAVICON=/favicon.ico
+APP_INSTALLED=false
 
 LOG_CHANNEL=daily
 LOG_LEVEL=error
@@ -136,9 +136,9 @@ DB_DATABASE=${MYSQL_DB}
 DB_USERNAME=${MYSQL_USER}
 DB_PASSWORD=${MYSQL_PASS}
 
-CACHE_DRIVER=file
-SESSION_DRIVER=database
-QUEUE_CONNECTION=database
+CACHE_STORE=file
+SESSION_DRIVER=file
+QUEUE_CONNECTION=sync
 
 MYSQL_HOST=127.0.0.1
 MYSQL_PORT=3306
@@ -149,21 +149,9 @@ MYSQL_PASSWORD=${MYSQL_PASS}
 open('/var/www/gecko/.env', 'w').write(content)
 "
 
-info "Migrations..."
-php artisan migrate --force
-php artisan db:seed --force 2>/dev/null || true
-
-info "Création compte admin..."
-php artisan p:user:make \
-    --email="$ADMIN_EMAIL" \
-    --username="$ADMIN_USER" \
-    --password="$ADMIN_PASS" \
-    --admin=1 2>/dev/null || true
-
 chown -R www-data:www-data /var/www/gecko
 chmod -R 755 /var/www/gecko/storage /var/www/gecko/bootstrap/cache
-php artisan optimize
-success "Panel installé"
+success "Panel installé (configuration finale via l'assistant web)"
 
 # ── SSL d'abord (sans HTTPS dans nginx) ──
 step "Certificat SSL"
@@ -187,7 +175,7 @@ rm -f /etc/nginx/sites-enabled/default
 systemctl start php8.2-fpm
 nginx -t && systemctl reload nginx
 
-certbot certonly --nginx -d "$DOMAIN" --email "$ADMIN_EMAIL" --agree-tos --non-interactive
+certbot certonly --nginx -d "$DOMAIN" --register-unsafely-without-email --agree-tos --non-interactive
 success "SSL obtenu"
 
 # ── Nginx final avec HTTPS ──
@@ -328,14 +316,24 @@ echo -e "${GREEN}╔════════════════════
 echo -e "${GREEN}║    Gecko Panel installé avec succès !        ║${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "  ${BOLD}URL du panel    :${NC} https://${DOMAIN}/admin"
-echo -e "  ${BOLD}Email admin     :${NC} ${ADMIN_EMAIL}"
-echo -e "  ${BOLD}User admin      :${NC} ${ADMIN_USER}"
+echo -e "  ${BOLD}Ouvre cette adresse dans ton navigateur pour terminer :${NC}"
+echo -e "  ${CYAN}https://${DOMAIN}/installer${NC}"
+echo ""
+echo -e "  ${YELLOW}L'assistant web va te demander :${NC}"
+echo -e "    - le compte administrateur (email / utilisateur / mot de passe)"
+echo -e "    - la base de données (déjà prête, voir infos ci-dessous)"
+echo -e "    - le cache, la queue et les sessions"
+echo ""
+echo -e "  ${BOLD}Infos base de données (à coller dans l'assistant) :${NC}"
+echo -e "  ${BOLD}Driver          :${NC} MariaDB"
+echo -e "  ${BOLD}Hôte            :${NC} 127.0.0.1"
+echo -e "  ${BOLD}Port            :${NC} 3306"
 echo -e "  ${BOLD}DB Name         :${NC} ${MYSQL_DB}"
 echo -e "  ${BOLD}DB User         :${NC} ${MYSQL_USER}"
 echo -e "  ${BOLD}DB Password     :${NC} ${MYSQL_PASS}"
 echo -e "  ${BOLD}MySQL root pass :${NC} ${MYSQL_ROOT_PASS}"
+echo -e "  ${YELLOW}(conserve ce mot de passe root quelque part au cas où)${NC}"
 echo ""
-echo -e "  ${YELLOW}Configure un nœud Wings dans le panel puis :${NC}"
+echo -e "  ${YELLOW}Une fois le panel configuré, ajoute un nœud Wings puis :${NC}"
 echo -e "  ${YELLOW}systemctl start wings${NC}"
 echo ""
