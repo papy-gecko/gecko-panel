@@ -3,14 +3,9 @@
 namespace App\Livewire\Installer;
 
 use App\Enums\TablerIcon;
-use App\Jobs\InstallEgg;
-use App\Livewire\Installer\Steps\CacheStep;
 use App\Livewire\Installer\Steps\DatabaseStep;
-use App\Livewire\Installer\Steps\EggSelectionStep;
 use App\Livewire\Installer\Steps\EnvironmentStep;
-use App\Livewire\Installer\Steps\QueueStep;
 use App\Livewire\Installer\Steps\RequirementsStep;
-use App\Livewire\Installer\Steps\SessionStep;
 use App\Models\User;
 use App\Services\Helpers\LanguageService;
 use App\Services\Users\UserCreationService;
@@ -106,13 +101,16 @@ class PanelInstaller extends SimplePage implements HasForms
     protected function getDefaultSteps(): array
     {
         return [
+            // Cache, queue, sessions and egg selection are deliberately left
+            // out of the wizard: install.sh already wrote sane working
+            // defaults (file cache, sync queue, file sessions) into .env, and
+            // asking users to pick these (or worse, run extra SSH commands
+            // for a queue worker service) defeats the point of a "click and
+            // configure from the browser" installer. Power users can still
+            // tweak these later from .env or the panel's settings.
             RequirementsStep::make(),
             EnvironmentStep::make($this),
             DatabaseStep::make($this),
-            EggSelectionStep::make(),
-            CacheStep::make($this),
-            QueueStep::make($this),
-            SessionStep::make(),
         ];
     }
 
@@ -149,11 +147,15 @@ class PanelInstaller extends SimplePage implements HasForms
             $user = $this->createAdminUser($userCreationService);
             auth()->guard()->login($user, true);
 
-            // Write session data at the very end to avoid "page expired" errors
-            $this->writeToEnv('env_session');
-
-            // Install selected eggs
-            $this->installEggs();
+            // Cache/queue/session steps were removed from the wizard (see
+            // getDefaultSteps): write the same safe defaults install.sh
+            // already put in .env, written again here at the very end to
+            // avoid "page expired" errors if SESSION_DRIVER changes.
+            $this->writeToEnvironment([
+                'CACHE_STORE' => 'file',
+                'QUEUE_CONNECTION' => 'sync',
+                'SESSION_DRIVER' => 'file',
+            ]);
 
             // Redirect to admin panel
             $this->redirect(Filament::getPanel('admin')->getUrl());
@@ -233,35 +235,4 @@ class PanelInstaller extends SimplePage implements HasForms
         }
     }
 
-    public function installEggs(): void
-    {
-        try {
-            $selectedEggs = array_get($this->data, 'eggs', []);
-            if (!$selectedEggs) {
-                return;
-            }
-
-            foreach ($selectedEggs as $category => $eggs) {
-                foreach ($eggs as $downloadUrl) {
-                    InstallEgg::dispatch($downloadUrl);
-                }
-            }
-
-            Notification::make()
-                ->title(trans('installer.egg.background_install_started'))
-                ->body(trans('installer.egg.background_install_description', ['count' => array_sum(array_map('count', $selectedEggs))]))
-                ->success()
-                ->persistent()
-                ->send();
-        } catch (Exception $exception) {
-            report($exception);
-
-            Notification::make()
-                ->title(trans('installer.egg.exceptions.installation_failed'))
-                ->body($exception->getMessage())
-                ->danger()
-                ->persistent()
-                ->send();
-        }
-    }
 }
