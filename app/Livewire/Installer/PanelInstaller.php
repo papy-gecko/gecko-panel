@@ -137,9 +137,6 @@ class PanelInstaller extends SimplePage implements HasForms
     public function submit(UserCreationService $userCreationService): void
     {
         try {
-            // Disable installer
-            $this->writeToEnvironment(['APP_INSTALLED' => 'true']);
-
             // Run migrations
             $this->runMigrations();
 
@@ -151,10 +148,18 @@ class PanelInstaller extends SimplePage implements HasForms
             // getDefaultSteps): write the same safe defaults install.sh
             // already put in .env, written again here at the very end to
             // avoid "page expired" errors if SESSION_DRIVER changes.
+            //
+            // APP_INSTALLED is written LAST, only once migrations and the
+            // admin account both succeeded: writing it first (as upstream
+            // does) means a slow migration that gets killed by a reverse
+            // proxy timeout (e.g. Cloudflare's 524) leaves the panel marked
+            // as installed with no schema and no admin user — locked out of
+            // both the installer (404) and the panel itself.
             $this->writeToEnvironment([
                 'CACHE_STORE' => 'file',
                 'QUEUE_CONNECTION' => 'sync',
                 'SESSION_DRIVER' => 'file',
+                'APP_INSTALLED' => 'true',
             ]);
 
             // Redirect to admin panel
