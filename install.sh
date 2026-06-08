@@ -63,7 +63,7 @@ read -p "Continuer ? [o/N] : " CONFIRM
 # ── Système ──
 step "Mise à jour système"
 apt-get update -q && apt-get upgrade -y -q
-apt-get install -y -q curl wget git unzip tar nginx certbot python3-certbot-nginx \
+apt-get install -y -q curl wget git unzip tar nginx snapd \
     cron apt-transport-https ca-certificates gnupg2
 success "Système mis à jour"
 
@@ -208,6 +208,15 @@ OVERRIDEEOF
 systemctl daemon-reload
 systemctl restart php8.2-fpm
 success "Assistant de sécurisation SSH autorisé pour l'utilisateur '${SSH_SETUP_USER}'"
+
+# ── Certbot via snap ──
+# La version apt (python3-certbot) est buguée sur Debian bookworm avec les
+# nouvelles versions de python3-cryptography ("AttributeError: can't set
+# attribute"). Let's Encrypt recommande officiellement l'installation via snap.
+step "Certbot"
+snap install --classic certbot
+ln -sf /snap/bin/certbot /usr/bin/certbot
+success "Certbot installé"
 
 # ── SSL d'abord (sans HTTPS dans nginx) ──
 step "Certificat SSL"
