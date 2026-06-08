@@ -34,24 +34,24 @@ class SshSecurityStep
                     ->default(random_int(20000, 29999))
                     ->required(fn (Get $get) => $get('ssh_security.enabled'))
                     ->visible(fn (Get $get) => $get('ssh_security.enabled'))
-                    ->disabled(fn (Get $get) => filled($get('ssh_security.result'))),
+                    ->disabled(fn (Get $get) => filled($get('ssh_security.result.private_key'))),
                 Textarea::make('ssh_security.result.private_key')
                     ->label(trans('installer.ssh_security.fields.private_key'))
                     ->hintIcon(TablerIcon::QuestionMark, trans('installer.ssh_security.fields.private_key_help'))
                     ->rows(8)
                     ->readOnly()
                     ->extraInputAttributes(['style' => 'font-family: ui-monospace, monospace; font-size: 0.75rem'])
-                    ->visible(fn (Get $get) => filled($get('ssh_security.result'))),
+                    ->visible(fn (Get $get) => filled($get('ssh_security.result.private_key'))),
                 Textarea::make('ssh_security.result.bat')
                     ->label(trans('installer.ssh_security.fields.bat'))
                     ->hintIcon(TablerIcon::QuestionMark, trans('installer.ssh_security.fields.bat_help'))
                     ->rows(4)
                     ->readOnly()
                     ->extraInputAttributes(['style' => 'font-family: ui-monospace, monospace; font-size: 0.75rem'])
-                    ->visible(fn (Get $get) => filled($get('ssh_security.result'))),
+                    ->visible(fn (Get $get) => filled($get('ssh_security.result.bat'))),
             ])
             ->afterValidation(function (Get $get, $set) use ($installer) {
-                if (!$get('ssh_security.enabled') || filled($get('ssh_security.result'))) {
+                if (!$get('ssh_security.enabled') || filled($get('ssh_security.result.private_key'))) {
                     return;
                 }
 
