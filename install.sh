@@ -141,7 +141,7 @@ SESSION_DRIVER=file
 QUEUE_CONNECTION=sync
 
 # Utilisateur SSH autorisé pour l'assistant de sécurisation de l'accès SSH
-# (voir /installer — étape "Sécurité SSH"). Doit correspondre à l'utilisateur
+# (voir /installer — étape \"Sécurité SSH\"). Doit correspondre à l'utilisateur
 # déclaré dans /etc/sudoers.d/gecko-ssh-setup, sous peine de refus par sudo.
 SSH_HARDEN_USER=${SUDO_USER:-debian}
 
