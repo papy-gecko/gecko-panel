@@ -59,6 +59,11 @@ log "sauvegarde de sshd_config créée"
 
 # ── 2. Génération de la paire de clés dédiée ──
 ssh-keygen -t ed25519 -f "$KEY_PATH" -N "" -C "gecko-panel-$(date +%Y%m%d)" -q
+# Générée par root (le script tourne via sudo), la clé doit néanmoins être
+# relue par www-data — c'est PanelInstaller::hardenSsh() (PHP) qui l'affiche
+# dans le navigateur puis l'efface immédiatement après. On la passe donc à
+# www-data plutôt qu'à $SSH_USER (qui ne s'en sert jamais depuis le disque).
+chown www-data:www-data "$KEY_PATH" "${KEY_PATH}.pub"
 chmod 600 "$KEY_PATH"
 chmod 644 "${KEY_PATH}.pub"
 log "paire de clés générée : $KEY_PATH"
@@ -101,7 +106,12 @@ log "port $CURRENT_PORT fermé, authentification par mot de passe désactivée"
 
 # ── 7. Nettoyage ──
 rm -f "$BACKUP"
-chown "${SSH_USER}:${SSH_USER}" "$KEY_PATH" "${KEY_PATH}.pub"
+# Pas de chown vers $SSH_USER ici : la clé n'est jamais utilisée depuis le
+# disque par cet utilisateur — l'installateur web la lit, l'affiche dans le
+# navigateur puis l'efface (voir PanelInstaller::hardenSsh()). Elle doit donc
+# rester lisible par www-data (le process PHP qui exécute ce script via sudo) ;
+# un chown vers debian:debian la rend illisible et casse l'affichage final
+# ("file_get_contents(): Permission denied").
 
 log "terminé : SSH sécurisé sur le port $NEW_PORT avec authentification par clé uniquement"
 echo "${KEY_PATH}"
