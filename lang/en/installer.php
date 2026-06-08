@@ -31,9 +31,11 @@ return [
             'port' => 'New SSH port',
             'port_help' => 'Pick a port between 1024 and 65535. The switch is done safely: the new port is opened and tested before the old one is ever closed, so you cannot be locked out.',
             'private_key' => 'Private key',
-            'private_key_help' => 'Copy this into a file (e.g. gecko_id_ed25519) — it will not be shown again and has been removed from the server.',
+            'private_key_help' => 'Download the key using the button below — it will not be shown again and has been removed from the server.',
+            'download_key' => 'Download private key (gecko_id_ed25519)',
             'bat' => 'Connection shortcut (.bat)',
-            'bat_help' => 'Copy this into a file named after your server (e.g. gecko-server.bat) and place it next to your private key — double-click it to connect.',
+            'bat_help' => 'Download the shortcut using the button below and place it next to your private key — double-click it to connect.',
+            'download_bat' => 'Download connection shortcut (.bat)',
         ],
         'success' => 'SSH secured on port :port. Save the key and shortcut below, then click "Finish" again to complete the installation — they will not be shown again.',
         'exceptions' => [

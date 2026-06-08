@@ -31,6 +31,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Process\Process;
 
 /**
@@ -295,6 +296,39 @@ class PanelInstaller extends SimplePage implements HasForms
                 ->persistent()
                 ->send();
         }
+    }
+
+    /**
+     * Télécharge la clé privée SSH générée par le wizard en tant que fichier
+     * (gecko_id_ed25519, sans extension, format OpenSSH). Le contenu est lu
+     * depuis l'état du formulaire Livewire — il n'est plus sur le disque
+     * serveur à ce stade (hardenSsh() l'a déjà effacé après affichage).
+     */
+    public function downloadPrivateKey(): StreamedResponse
+    {
+        $key = $this->data['ssh_security']['result']['private_key'] ?? '';
+
+        return response()->streamDownload(
+            fn () => print($key),
+            'gecko_id_ed25519',
+            ['Content-Type' => 'application/octet-stream'],
+        );
+    }
+
+    /**
+     * Télécharge le raccourci de connexion SSH (.bat Windows) généré par le
+     * wizard. Le fichier doit être placé à côté de la clé privée et
+     * double-cliqué pour se connecter automatiquement au serveur.
+     */
+    public function downloadBat(): StreamedResponse
+    {
+        $bat = $this->data['ssh_security']['result']['bat'] ?? '';
+
+        return response()->streamDownload(
+            fn () => print($bat),
+            'gecko-server.bat',
+            ['Content-Type' => 'application/octet-stream'],
+        );
     }
 
     /**

@@ -31,9 +31,11 @@ return [
             'port' => 'Nouveau port SSH',
             'port_help' => 'Choisissez un port entre 1024 et 65535. La bascule est faite en toute sécurité : le nouveau port est ouvert et testé avant que l\'ancien ne soit fermé — vous ne pouvez pas être verrouillé hors du serveur.',
             'private_key' => 'Clé privée',
-            'private_key_help' => 'Copiez ce contenu dans un fichier (ex : gecko_id_ed25519) — elle ne sera plus affichée et a été supprimée du serveur.',
+            'private_key_help' => 'Téléchargez la clé via le bouton ci-dessous — elle ne sera plus jamais affichée et a été supprimée du serveur.',
+            'download_key' => 'Télécharger la clé privée (gecko_id_ed25519)',
             'bat' => 'Raccourci de connexion (.bat)',
-            'bat_help' => 'Copiez ce contenu dans un fichier nommé d\'après votre serveur (ex : gecko-server.bat) et placez-le à côté de votre clé privée — double-cliquez dessus pour vous connecter.',
+            'bat_help' => 'Téléchargez le raccourci via le bouton ci-dessous et placez-le à côté de votre clé privée — double-cliquez dessus pour vous connecter.',
+            'download_bat' => 'Télécharger le raccourci (.bat)',
         ],
         'success' => 'SSH sécurisé sur le port :port. Enregistrez la clé et le raccourci ci-dessous, puis cliquez de nouveau sur « Terminer » pour finaliser l\'installation — ils ne seront plus jamais affichés.',
         'exceptions' => [

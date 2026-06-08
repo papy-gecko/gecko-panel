@@ -3,9 +3,11 @@
 namespace App\Livewire\Installer\Steps;
 
 use App\Enums\TablerIcon;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard\Step;
 
@@ -39,12 +41,28 @@ class SshSecurityStep
                     ->readOnly()
                     ->extraInputAttributes(['style' => 'font-family: ui-monospace, monospace; font-size: 0.75rem'])
                     ->visible(fn (Get $get) => filled($get('ssh_security.result.private_key'))),
+                Actions::make([
+                    Action::make('download_key')
+                        ->label(trans('installer.ssh_security.fields.download_key'))
+                        ->icon(TablerIcon::Download)
+                        ->color('gray')
+                        ->action('downloadPrivateKey'),
+                ])
+                    ->visible(fn (Get $get) => filled($get('ssh_security.result.private_key'))),
                 Textarea::make('ssh_security.result.bat')
                     ->label(trans('installer.ssh_security.fields.bat'))
                     ->hintIcon(TablerIcon::QuestionMark, trans('installer.ssh_security.fields.bat_help'))
                     ->rows(4)
                     ->readOnly()
                     ->extraInputAttributes(['style' => 'font-family: ui-monospace, monospace; font-size: 0.75rem'])
+                    ->visible(fn (Get $get) => filled($get('ssh_security.result.bat'))),
+                Actions::make([
+                    Action::make('download_bat')
+                        ->label(trans('installer.ssh_security.fields.download_bat'))
+                        ->icon(TablerIcon::Download)
+                        ->color('primary')
+                        ->action('downloadBat'),
+                ])
                     ->visible(fn (Get $get) => filled($get('ssh_security.result.bat'))),
             ]);
             // Pas de afterValidation() ici : Filament n'appelle ce hook que
