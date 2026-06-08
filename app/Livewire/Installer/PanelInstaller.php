@@ -306,11 +306,12 @@ class PanelInstaller extends SimplePage implements HasForms
      */
     public function downloadPrivateKey(): StreamedResponse
     {
-        $key = $this->data['ssh_security']['result']['private_key'] ?? '';
+        $key      = $this->data['ssh_security']['result']['private_key']  ?? '';
+        $filename = $this->data['ssh_security']['result']['key_filename']  ?? 'gecko_ed25519';
 
         return response()->streamDownload(
             fn () => print($key),
-            'gecko_id_ed25519',
+            $filename,
             ['Content-Type' => 'application/octet-stream'],
         );
     }
@@ -322,11 +323,14 @@ class PanelInstaller extends SimplePage implements HasForms
      */
     public function downloadBat(): StreamedResponse
     {
-        $bat = $this->data['ssh_security']['result']['bat'] ?? '';
+        $bat      = $this->data['ssh_security']['result']['bat']           ?? '';
+        // key_filename = "gecko-monserveur.fr_ed25519" → bat = "gecko-monserveur.fr.bat"
+        $keyFile  = $this->data['ssh_security']['result']['key_filename']  ?? 'gecko-server_ed25519';
+        $filename = preg_replace('/_ed25519$/', '', $keyFile) . '.bat';
 
         return response()->streamDownload(
             fn () => print($bat),
-            'gecko-server.bat',
+            $filename,
             ['Content-Type' => 'application/octet-stream'],
         );
     }
@@ -373,7 +377,12 @@ class PanelInstaller extends SimplePage implements HasForms
         @unlink($keyPath . '.pub');
 
         $host = parse_url(config('app.url'), PHP_URL_HOST) ?: request()->getHost();
-        $keyFileName = 'gecko_id_ed25519';
+
+        // Nom de fichier unique par serveur : "gecko-monserveur.fr_ed25519"
+        // — évite tout écrasement si l'utilisateur gère plusieurs serveurs
+        // Gecko ou s'il possède déjà une clé nommée "gecko_id_ed25519".
+        $safeHost = preg_replace('/[^a-z0-9._-]/i', '_', $host);
+        $keyFileName = "gecko-{$safeHost}_ed25519";
 
         $bat = implode("\r\n", [
             '@echo off',
@@ -383,9 +392,10 @@ class PanelInstaller extends SimplePage implements HasForms
         ]);
 
         return [
-            'port' => $port,
-            'private_key' => $privateKey,
-            'bat' => $bat,
+            'port'          => $port,
+            'private_key'   => $privateKey,
+            'key_filename'  => $keyFileName,
+            'bat'           => $bat,
         ];
     }
 
