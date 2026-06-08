@@ -63,7 +63,7 @@ read -p "Continuer ? [o/N] : " CONFIRM
 # ── Système ──
 step "Mise à jour système"
 apt-get update -q && apt-get upgrade -y -q
-apt-get install -y -q curl wget git unzip tar nginx snapd \
+apt-get install -y -q curl wget git unzip tar nginx python3-venv \
     cron apt-transport-https ca-certificates gnupg2
 success "Système mis à jour"
 
@@ -209,13 +209,15 @@ systemctl daemon-reload
 systemctl restart php8.2-fpm
 success "Assistant de sécurisation SSH autorisé pour l'utilisateur '${SSH_SETUP_USER}'"
 
-# ── Certbot via snap ──
-# La version apt (python3-certbot) est buguée sur Debian bookworm avec les
-# nouvelles versions de python3-cryptography ("AttributeError: can't set
-# attribute"). Let's Encrypt recommande officiellement l'installation via snap.
+# ── Certbot via virtualenv pip ──
+# La version apt (python3-certbot 2.1.0) est buguée sur Debian bookworm avec
+# les nouvelles versions de python3-cryptography ("AttributeError: can't set
+# attribute"). On installe certbot dans un virtualenv Python isolé — méthode
+# recommandée par Let's Encrypt quand le paquet distrib est trop ancien.
 step "Certbot"
-snap install --classic certbot
-ln -sf /snap/bin/certbot /usr/bin/certbot
+python3 -m venv /opt/certbot
+/opt/certbot/bin/pip install --quiet --upgrade pip certbot certbot-nginx
+ln -sf /opt/certbot/bin/certbot /usr/local/bin/certbot
 success "Certbot installé"
 
 # ── SSL d'abord (sans HTTPS dans nginx) ──
