@@ -40,6 +40,16 @@ echo ""
 step "Configuration"
 read -p "Domaine du panel (ex: panel.monserveur.fr) — le DNS doit déjà pointer vers ce serveur : " DOMAIN
 
+# Tolère les saisies "humaines" courantes (copier-coller depuis la barre
+# d'adresse du navigateur, par ex.) : on retire un éventuel schéma
+# http(s):// et tout / final, sinon nginx/certbot rejettent la valeur
+# avec une erreur cryptique ("appears to be a URL, not a FQDN").
+DOMAIN="${DOMAIN#http://}"
+DOMAIN="${DOMAIN#https://}"
+DOMAIN="${DOMAIN%%/*}"
+
+[ -z "$DOMAIN" ] && error "Domaine vide — relance le script et indique un nom de domaine valide (ex: panel.monserveur.fr)"
+
 MYSQL_USER="gecko"
 MYSQL_DB="gecko_panel"
 MYSQL_PASS=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 24)
