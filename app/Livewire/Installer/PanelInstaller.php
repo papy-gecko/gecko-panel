@@ -112,7 +112,7 @@ class PanelInstaller extends SimplePage implements HasForms
             RequirementsStep::make(),
             EnvironmentStep::make($this),
             DatabaseStep::make($this),
-            SshSecurityStep::make($this),
+            SshSecurityStep::make(),
         ];
     }
 
@@ -139,6 +139,29 @@ class PanelInstaller extends SimplePage implements HasForms
     public function submit(UserCreationService $userCreationService): void
     {
         try {
+            // La sécurisation SSH était auparavant déclenchée par le hook
+            // afterValidation() de SshSecurityStep — mais comme c'est la
+            // DERNIÈRE étape du wizard, ce hook n'est jamais appelé : Filament
+            // ne l'exécute que lors du passage à l'étape suivante (nextStep),
+            // jamais sur le bouton "Terminer" final, qui soumet directement
+            // le formulaire. On la déclenche donc ici, en tout premier.
+            //
+            // On s'arrête volontairement après cette étape (sans lancer les
+            // migrations) pour forcer l'affichage de la clé privée et du
+            // .bat générés : ils ne sont jamais conservés sur le disque du
+            // serveur, donc si on enchaînait directement sur la redirection
+            // finale, l'utilisateur les perdrait définitivement. Un second
+            // clic sur "Terminer" poursuivra l'installation normalement (la
+            // condition ci-dessous devient fausse une fois le résultat rempli).
+            if (
+                ($this->data['ssh_security']['enabled'] ?? false)
+                && blank($this->data['ssh_security']['result']['private_key'] ?? null)
+            ) {
+                $this->performSshHardening();
+
+                return;
+            }
+
             // Run migrations
             $this->runMigrations();
 
@@ -241,6 +264,36 @@ class PanelInstaller extends SimplePage implements HasForms
                 ->send();
 
             throw new Halt(trans('installer.exceptions.create_user'));
+        }
+    }
+
+    /**
+     * Lance hardenSsh() et range son résultat dans le formulaire pour que
+     * SshSecurityStep affiche la clé privée et le .bat générés (ou un message
+     * d'erreur en cas d'échec). Centralise la gestion d'erreurs qui vivait
+     * auparavant dans le hook afterValidation() de l'étape — devenu mort code
+     * puisqu'il n'est jamais appelé sur la dernière étape d'un wizard.
+     */
+    protected function performSshHardening(): void
+    {
+        try {
+            $result = $this->hardenSsh((int) $this->data['ssh_security']['port']);
+            $this->data['ssh_security']['result'] = $result;
+
+            Notification::make()
+                ->title(trans('installer.ssh_security.success', ['port' => $result['port']]))
+                ->success()
+                ->persistent()
+                ->send();
+        } catch (Exception $exception) {
+            report($exception);
+
+            Notification::make()
+                ->title(trans('installer.ssh_security.exceptions.failed'))
+                ->body($exception->getMessage())
+                ->danger()
+                ->persistent()
+                ->send();
         }
     }
 

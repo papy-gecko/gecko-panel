@@ -35,7 +35,7 @@ return [
             'bat' => 'Raccourci de connexion (.bat)',
             'bat_help' => 'Copiez ce contenu dans un fichier nommé d\'après votre serveur (ex : gecko-server.bat) et placez-le à côté de votre clé privée — double-cliquez dessus pour vous connecter.',
         ],
-        'success' => 'SSH sécurisé sur le port :port. Enregistrez la clé et le raccourci ci-dessous avant de continuer.',
+        'success' => 'SSH sécurisé sur le port :port. Enregistrez la clé et le raccourci ci-dessous, puis cliquez de nouveau sur « Terminer » pour finaliser l\'installation — ils ne seront plus jamais affichés.',
         'exceptions' => [
             'failed' => 'Impossible de sécuriser SSH automatiquement',
         ],

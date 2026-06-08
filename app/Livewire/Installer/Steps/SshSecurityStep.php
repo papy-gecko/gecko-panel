@@ -3,18 +3,15 @@
 namespace App\Livewire\Installer\Steps;
 
 use App\Enums\TablerIcon;
-use App\Livewire\Installer\PanelInstaller;
-use Exception;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
-use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard\Step;
 
 class SshSecurityStep
 {
-    public static function make(PanelInstaller $installer): Step
+    public static function make(): Step
     {
         return Step::make('ssh_security')
             ->label(trans('installer.ssh_security.title'))
@@ -49,31 +46,12 @@ class SshSecurityStep
                     ->readOnly()
                     ->extraInputAttributes(['style' => 'font-family: ui-monospace, monospace; font-size: 0.75rem'])
                     ->visible(fn (Get $get) => filled($get('ssh_security.result.bat'))),
-            ])
-            ->afterValidation(function (Get $get, $set) use ($installer) {
-                if (!$get('ssh_security.enabled') || filled($get('ssh_security.result.private_key'))) {
-                    return;
-                }
-
-                try {
-                    $result = $installer->hardenSsh((int) $get('ssh_security.port'));
-                    $set('ssh_security.result', $result);
-
-                    Notification::make()
-                        ->title(trans('installer.ssh_security.success', ['port' => $result['port']]))
-                        ->success()
-                        ->persistent()
-                        ->send();
-                } catch (Exception $exception) {
-                    report($exception);
-
-                    Notification::make()
-                        ->title(trans('installer.ssh_security.exceptions.failed'))
-                        ->body($exception->getMessage())
-                        ->danger()
-                        ->persistent()
-                        ->send();
-                }
-            });
+            ]);
+            // Pas de afterValidation() ici : Filament n'appelle ce hook que
+            // lors du passage à l'étape SUIVANTE (voir Wizard::nextStep()) —
+            // jamais sur le bouton "Terminer" de la dernière étape, qui
+            // soumet directement le formulaire. hardenSsh() est donc déclenché
+            // depuis PanelInstaller::submit() (voir performSshHardening()),
+            // qui s'exécute bien à ce moment-là.
     }
 }

@@ -35,7 +35,7 @@ return [
             'bat' => 'Connection shortcut (.bat)',
             'bat_help' => 'Copy this into a file named after your server (e.g. gecko-server.bat) and place it next to your private key — double-click it to connect.',
         ],
-        'success' => 'SSH secured on port :port. Save the key and shortcut below before continuing.',
+        'success' => 'SSH secured on port :port. Save the key and shortcut below, then click "Finish" again to complete the installation — they will not be shown again.',
         'exceptions' => [
             'failed' => 'Could not secure SSH automatically',
         ],
