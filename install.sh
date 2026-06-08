@@ -43,7 +43,6 @@ read -p "Domaine du panel (ex: panel.monserveur.fr) — le DNS doit déjà point
 MYSQL_USER="gecko"
 MYSQL_DB="gecko_panel"
 MYSQL_PASS=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 24)
-MYSQL_ROOT_PASS=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 24)
 
 echo ""
 info "Domaine : $DOMAIN"
@@ -71,12 +70,18 @@ success "PHP 8.2 installé"
 # ── MySQL ──
 step "MySQL"
 apt-get install -y -q mariadb-server
-# Utilise debian.cnf pour le premier accès (auth socket Ubuntu/Debian)
-DEBIAN_CNF="/etc/mysql/debian.cnf"
-mysql --defaults-file="$DEBIAN_CNF" -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASS}'; FLUSH PRIVILEGES;"
-mysql -u root -p"${MYSQL_ROOT_PASS}" -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DB}\`;"
-mysql -u root -p"${MYSQL_ROOT_PASS}" -e "CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_PASS}';"
-mysql -u root -p"${MYSQL_ROOT_PASS}" -e "GRANT ALL PRIVILEGES ON \`${MYSQL_DB}\`.* TO '${MYSQL_USER}'@'localhost'; FLUSH PRIVILEGES;"
+# Sur Debian/Ubuntu, root@localhost s'authentifie via le plugin unix_socket :
+# tout utilisateur OS root (donc ce script lancé avec sudo) peut se connecter
+# en tant que root@localhost SANS mot de passe, par le socket. Inutile — et
+# même contre-productif — de fixer un mot de passe root : le faire casserait
+# l'auth socket et rendrait le script non-rejouable (une ré-exécution ne
+# connaîtrait pas l'ancien mot de passe généré aléatoirement la fois d'avant).
+# On utilise donc directement `mysql -u root` pour toutes les opérations, ce
+# qui rend cette étape idempotente, y compris après une install interrompue.
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DB}\`;"
+mysql -u root -e "CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_PASS}';"
+mysql -u root -e "ALTER USER '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_PASS}';"
+mysql -u root -e "GRANT ALL PRIVILEGES ON \`${MYSQL_DB}\`.* TO '${MYSQL_USER}'@'localhost'; FLUSH PRIVILEGES;"
 success "MySQL configuré"
 
 # ── Node.js ──
@@ -92,6 +97,10 @@ success "Composer installé"
 
 # ── Panel ──
 step "Installation Gecko Panel"
+# Une tentative précédente interrompue peut avoir laissé un clone partiel —
+# on repart d'un dossier propre pour que le script soit rejouable sans
+# intervention manuelle.
+[ -d /var/www/gecko ] && rm -rf /var/www/gecko
 mkdir -p /var/www/gecko
 git clone https://github.com/papy-gecko/gecko-panel.git /var/www/gecko
 cd /var/www/gecko
@@ -359,8 +368,6 @@ echo -e "  ${BOLD}Port            :${NC} 3306"
 echo -e "  ${BOLD}DB Name         :${NC} ${MYSQL_DB}"
 echo -e "  ${BOLD}DB User         :${NC} ${MYSQL_USER}"
 echo -e "  ${BOLD}DB Password     :${NC} ${MYSQL_PASS}"
-echo -e "  ${BOLD}MySQL root pass :${NC} ${MYSQL_ROOT_PASS}"
-echo -e "  ${YELLOW}(conserve ce mot de passe root quelque part au cas où)${NC}"
 echo ""
 echo -e "  ${YELLOW}Une fois le panel configuré, ajoute un nœud Wings puis :${NC}"
 echo -e "  ${YELLOW}systemctl start wings${NC}"
