@@ -269,7 +269,11 @@ class PanelInstaller extends SimplePage implements HasForms
             throw new Exception(trim($process->getErrorOutput()) ?: trim($process->getOutput()));
         }
 
-        $keyPath = trim($process->getOutput());
+        // Le script n'écrit QUE le chemin de la clé sur stdout (tout le reste —
+        // logs de progression — part sur stderr) ; on ne garde que la dernière
+        // ligne non vide par sécurité, au cas où une sortie parasite s'invite.
+        $outputLines = preg_split('/\r?\n/', trim($process->getOutput()));
+        $keyPath = trim((string) end($outputLines));
         $privateKey = file_get_contents($keyPath);
 
         if ($privateKey === false) {

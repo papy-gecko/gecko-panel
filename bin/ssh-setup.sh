@@ -23,7 +23,7 @@ KEY_PATH="${OUT_DIR}/gecko_id_ed25519"
 USER_HOME=$(getent passwd "$SSH_USER" | cut -d: -f6)
 AUTHORIZED_KEYS="${USER_HOME}/.ssh/authorized_keys"
 
-log()  { echo "[ssh-setup] $1"; }
+log()  { echo "[ssh-setup] $1" >&2; }
 fail() { echo "[ssh-setup][ERROR] $1" >&2; exit 1; }
 
 [ -d "$USER_HOME" ] || fail "utilisateur '$SSH_USER' introuvable"
