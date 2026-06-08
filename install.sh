@@ -192,6 +192,20 @@ www-data ALL=(root) NOPASSWD: /var/www/gecko/bin/ssh-setup.sh ${SSH_SETUP_USER} 
 SUDOEOF
 chmod 440 /etc/sudoers.d/gecko-ssh-setup
 visudo -cf /etc/sudoers.d/gecko-ssh-setup || error "fichier sudoers invalide pour l'assistant SSH"
+
+# PHP-FPM tourne avec ProtectSystem=full (bac à sable systemd) : /etc est en
+# lecture seule pour ce service ET pour tout processus qu'il lance — y compris
+# via sudo, qui hérite du même espace de montage. Sans dérogation ciblée, le
+# script de sécurisation ne peut même pas sauvegarder /etc/ssh/sshd_config
+# ("Read-only file system"). On ouvre donc UNIQUEMENT /etc/ssh en écriture,
+# en laissant le reste de la protection intacte.
+mkdir -p /etc/systemd/system/php8.2-fpm.service.d
+cat > /etc/systemd/system/php8.2-fpm.service.d/gecko-ssh-hardening.conf << OVERRIDEEOF
+[Service]
+ReadWritePaths=/etc/ssh
+OVERRIDEEOF
+systemctl daemon-reload
+systemctl restart php8.2-fpm
 success "Assistant de sécurisation SSH autorisé pour l'utilisateur '${SSH_SETUP_USER}'"
 
 # ── SSL d'abord (sans HTTPS dans nginx) ──
