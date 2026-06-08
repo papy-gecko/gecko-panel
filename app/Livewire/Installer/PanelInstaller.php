@@ -251,6 +251,8 @@ class PanelInstaller extends SimplePage implements HasForms
     {
         try {
             $userData = array_get($this->data, 'user');
+            // DEBUG TEMPORAIRE — à retirer une fois la cause du null email identifiée
+            \Illuminate\Support\Facades\Log::debug('createAdminUser userData', ['userData' => $userData, 'all_keys' => array_keys($this->data)]);
             $userData['root_admin'] = true;
 
             return $userCreationService->handle($userData);
