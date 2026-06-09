@@ -41,7 +41,7 @@ class DiscordPreview extends Widget
                 'content' => null,
                 'sender' => [
                     'name' => 'Gecko',
-                    'avatar' => 'https://raw.githubusercontent.com/pelican-dev/panel/refs/heads/main/public/pelican.ico',
+                    'avatar' => 'https://raw.githubusercontent.com/papy-gecko/gecko-panel/refs/heads/main/public/favicon.ico',
                 ],
                 'embeds' => [],
                 'getTime' => 'Today at ' . Carbon::now()->format('h:i A'),
@@ -69,7 +69,7 @@ class DiscordPreview extends Widget
             'content' => data_get($payload, 'content'),
             'sender' => [
                 'name' => data_get($payload, 'username', 'Gecko'),
-                'avatar' => data_get($payload, 'avatar_url', 'https://raw.githubusercontent.com/pelican-dev/panel/refs/heads/main/public/pelican.ico'),
+                'avatar' => data_get($payload, 'avatar_url', 'https://raw.githubusercontent.com/papy-gecko/gecko-panel/refs/heads/main/public/favicon.ico'),
             ],
             'embeds' => $embeds,
             'getTime' => 'Today at ' . Carbon::now()->format('h:i A'),
