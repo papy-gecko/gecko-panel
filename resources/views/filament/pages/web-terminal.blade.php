@@ -1,6 +1,6 @@
 <x-filament-panels::page>
 <div x-data="{
-    cmd:'', cwd:'/var/www/pelican', history:[], running:false,
+    cmd:'', cwd:'/var/www/gecko', history:[], running:false,
     cmdHistory:[], histIdx:-1,
     showPty:false, ptyCmd:'',
     ptyApps:['nano','vim','vi','htop','top','less','more','man','mc','ncdu','watch'],
@@ -84,7 +84,7 @@
     </div>
 
     <div class="flex flex-wrap gap-2">
-        <template x-for="s in ['ls -la','df -h','free -h','docker ps','nano /etc/pelican/config.yml','htop','systemctl list-units --state=running']" :key="s">
+        <template x-for="s in ['ls -la','df -h','free -h','docker ps','nano /var/www/gecko/.env','htop','systemctl list-units --state=running']" :key="s">
             <button @click="cmd=s; run()" class="px-2.5 py-1 text-xs rounded font-mono" style="background:var(--c-surface2);border:1px solid var(--c-border);color:var(--c-text3)" x-text="s"></button>
         </template>
     </div>

@@ -9,7 +9,7 @@ class TerminalController extends Controller
     public function execute(Request $request): JsonResponse
     {
         $command = $request->input('command','');
-        $cwd = $request->input('cwd','/var/www/pelican');
+        $cwd = $request->input('cwd','/var/www/gecko');
         if (!$command) return response()->json(['output'=>'','cwd'=>$cwd]);
         foreach ($this->blocked as $d) {
             if(str_contains($command,$d)) return response()->json(['output'=>'Commande bloquée.','cwd'=>$cwd,'error'=>true]);
@@ -21,7 +21,7 @@ class TerminalController extends Controller
         }
         $tmp = tempnam('/tmp','cmd_');
         file_put_contents($tmp, "cd ".escapeshellarg($cwd)."\n".$command."\n");
-        $out = shell_exec('sudo bash '.$tmp.' 2>&1');
+        $out = shell_exec('bash '.$tmp.' 2>&1');
         unlink($tmp);
         return response()->json(['output'=>$out??'','cwd'=>$cwd]);
     }
