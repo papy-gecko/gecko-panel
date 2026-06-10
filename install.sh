@@ -38,7 +38,7 @@ echo ""
 # données, cache, queue, sessions...) se configure ensuite depuis le
 # navigateur via l'assistant d'installation intégré au panel (/installer).
 step "Configuration"
-read -p "Domaine du panel (ex: panel.monserveur.fr) — le DNS doit déjà pointer vers ce serveur : " DOMAIN
+read -p "Domaine du panel (ex: panel.monserveur.fr) — le DNS doit déjà pointer vers ce serveur : " DOMAIN </dev/tty
 
 # Tolère les saisies "humaines" courantes (copier-coller depuis la barre
 # d'adresse du navigateur, par ex.) : on retire un éventuel schéma
@@ -57,7 +57,7 @@ MYSQL_PASS=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 24)
 echo ""
 info "Domaine : $DOMAIN"
 info "Le compte admin et la base de données seront configurés via l'assistant web après l'installation."
-read -p "Continuer ? [o/N] : " CONFIRM
+read -p "Continuer ? [o/N] : " CONFIRM </dev/tty
 [[ "$CONFIRM" != "o" && "$CONFIRM" != "O" ]] && exit 0
 
 # ── Système ──
