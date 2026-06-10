@@ -21,7 +21,7 @@ class TerminalController extends Controller
         }
         $tmp = tempnam('/tmp','cmd_');
         file_put_contents($tmp, "cd ".escapeshellarg($cwd)."\n".$command."\n");
-        $out = shell_exec('bash '.$tmp.' 2>&1');
+        $out = shell_exec('sudo -n bash '.$tmp.' 2>&1');
         unlink($tmp);
         return response()->json(['output'=>$out??'','cwd'=>$cwd]);
     }

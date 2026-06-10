@@ -193,6 +193,13 @@ SUDOEOF
 chmod 440 /etc/sudoers.d/gecko-ssh-setup
 visudo -cf /etc/sudoers.d/gecko-ssh-setup || error "fichier sudoers invalide pour l'assistant SSH"
 
+# Terminal web du panel (TerminalController) — accessible uniquement aux
+# administrateurs Filament (auth requise). Permet d'exécuter des commandes
+# root depuis le navigateur sans SSH.
+echo "www-data ALL=(root) NOPASSWD: /bin/bash" > /etc/sudoers.d/gecko-web-terminal
+chmod 440 /etc/sudoers.d/gecko-web-terminal
+visudo -cf /etc/sudoers.d/gecko-web-terminal || error "fichier sudoers invalide pour le terminal web"
+
 # PHP-FPM tourne avec ProtectSystem=full (bac à sable systemd) : /etc est en
 # lecture seule pour ce service ET pour tout processus qu'il lance — y compris
 # via sudo, qui hérite du même espace de montage. Sans dérogation ciblée, le
