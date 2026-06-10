@@ -293,6 +293,15 @@ server {
         client_max_body_size 512m;
     }
 
+    location /gotty/ {
+        proxy_pass http://127.0.0.1:7681/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_read_timeout 3600s;
+    }
+
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
     }
@@ -343,6 +352,33 @@ step "Docker"
 curl -fsSL https://get.docker.com | sh 2>/dev/null
 systemctl enable --now docker
 success "Docker installé"
+
+# ── GoTTY ──
+step "GoTTY (terminal web PTY)"
+GOTTY_VERSION="1.5.0"
+curl -fsSL "https://github.com/sorenisanerd/gotty/releases/download/v${GOTTY_VERSION}/gotty_v${GOTTY_VERSION}_linux_amd64.tar.gz" \
+    -o /tmp/gotty.tar.gz
+tar -xzf /tmp/gotty.tar.gz -C /usr/local/bin/ gotty
+chmod +x /usr/local/bin/gotty
+rm -f /tmp/gotty.tar.gz
+
+cat > /etc/systemd/system/gotty.service << GOTTYEOF
+[Unit]
+Description=GoTTY Web Terminal
+After=network.target
+
+[Service]
+User=root
+ExecStart=/usr/local/bin/gotty --address 127.0.0.1 --port 7681 --permit-write bash
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+GOTTYEOF
+
+systemctl enable --now gotty
+success "GoTTY installé"
 
 # ── Wings ──
 step "Wings"
