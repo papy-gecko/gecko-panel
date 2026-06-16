@@ -7,6 +7,7 @@ use App\Livewire\Installer\Steps\DatabaseStep;
 use App\Livewire\Installer\Steps\EnvironmentStep;
 use App\Livewire\Installer\Steps\RequirementsStep;
 use App\Livewire\Installer\Steps\SshSecurityStep;
+use App\Models\Node;
 use App\Models\User;
 use App\Services\Helpers\LanguageService;
 use App\Services\Users\UserCreationService;
@@ -170,6 +171,9 @@ class PanelInstaller extends SimplePage implements HasForms
             $user = $this->createAdminUser($userCreationService);
             auth()->guard()->login($user, true);
 
+            // Create default node automatically
+            $this->createDefaultNode();
+
             // Cache/queue/session steps were removed from the wizard (see
             // getDefaultSteps): write the same safe defaults install.sh
             // already put in .env, written again here at the very end to
@@ -295,6 +299,41 @@ $userData['root_admin'] = true;
                 ->danger()
                 ->persistent()
                 ->send();
+        }
+    }
+
+    /**
+     * Crée automatiquement un node Wings local avec les paramètres par défaut.
+     * Utilise le domaine du panel comme FQDN et SSL si le panel est en HTTPS.
+     */
+    protected function createDefaultNode(): void
+    {
+        try {
+            $host = parse_url(config('app.url'), PHP_URL_HOST) ?: request()->getHost();
+            $scheme = request()->isSecure() ? 'https' : 'http';
+
+            Node::create([
+                'name'                => 'Main Node',
+                'fqdn'                => $host,
+                'scheme'              => $scheme,
+                'behind_proxy'        => false,
+                'public'              => true,
+                'maintenance_mode'    => false,
+                'memory'              => 0,
+                'memory_overallocate' => 0,
+                'disk'                => 0,
+                'disk_overallocate'   => 0,
+                'cpu'                 => 0,
+                'cpu_overallocate'    => 0,
+                'upload_size'         => 256,
+                'daemon_base'         => '/var/lib/pelican/volumes',
+                'daemon_sftp'         => 2022,
+                'daemon_listen'       => 8080,
+                'daemon_connect'      => 8080,
+            ]);
+        } catch (Exception $exception) {
+            report($exception);
+            // Non bloquant : le node peut être créé manuellement ensuite
         }
     }
 
