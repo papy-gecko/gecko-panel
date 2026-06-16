@@ -64,7 +64,12 @@ read -p "Continuer ? [o/N] : " CONFIRM </dev/tty
 step "Mise à jour système"
 apt-get update -q && apt-get upgrade -y -q
 apt-get install -y -q curl wget git unzip tar nginx python3-venv \
-    cron apt-transport-https ca-certificates gnupg2
+    cron apt-transport-https ca-certificates gnupg2 ufw
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw allow 8080/tcp
+ufw --force enable
 success "Système mis à jour"
 
 # ── PHP 8.2 ──
@@ -416,15 +421,6 @@ WINGSEOF
 systemctl enable wings
 success "Wings installé"
 
-# ── UFW ──
-step "Firewall"
-apt-get install -y -q ufw
-ufw allow 22/tcp
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw allow 8080/tcp
-ufw --force enable
-success "UFW configuré"
 
 # ── Résumé ──
 echo ""
