@@ -367,10 +367,10 @@ success "Docker installé"
 
 # ── GoTTY ──
 step "GoTTY (terminal web PTY)"
-GOTTY_VERSION="1.5.0"
+GOTTY_VERSION=$(curl -fsSL https://api.github.com/repos/sorenisanerd/gotty/releases/latest | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
 curl -fsSL "https://github.com/sorenisanerd/gotty/releases/download/v${GOTTY_VERSION}/gotty_v${GOTTY_VERSION}_linux_amd64.tar.gz" \
     -o /tmp/gotty.tar.gz
-tar -xzf /tmp/gotty.tar.gz -C /usr/local/bin/ gotty
+tar -xzf /tmp/gotty.tar.gz -C /usr/local/bin/
 chmod +x /usr/local/bin/gotty
 rm -f /tmp/gotty.tar.gz
 
