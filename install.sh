@@ -181,6 +181,12 @@ open('/var/www/gecko/.env', 'w').write(content)
 
 chown -R www-data:www-data /var/www/gecko
 chmod -R 755 /var/www/gecko/storage /var/www/gecko/bootstrap/cache
+
+# Résolution locale du domaine : évite que le panel PHP passe par Cloudflare
+# pour joindre Wings (qui écoute sur le même serveur). Sans ça, Cloudflare
+# bloque le port 8080 et la communication panel↔Wings échoue.
+grep -qF "${DOMAIN}" /etc/hosts || echo "127.0.0.1 ${DOMAIN}" >> /etc/hosts
+
 success "Panel installé (configuration finale via l'assistant web)"
 
 # ── Autorisation pour l'assistant de sécurisation SSH ──
