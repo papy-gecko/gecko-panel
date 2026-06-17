@@ -69,6 +69,7 @@ ufw allow 22/tcp
 ufw allow 80/tcp
 ufw allow 443/tcp
 ufw allow 8080/tcp
+ufw allow 40120/tcp
 ufw --force enable
 success "Système mis à jour"
 
