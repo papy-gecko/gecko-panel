@@ -426,7 +426,7 @@ $userData['root_admin'] = true;
         $bat = implode("\r\n", [
             '@echo off',
             sprintf('title Connexion SSH - %s', $host),
-            sprintf('ssh -i %%~dp0%s -p %d %s@%s', $keyFileName, $port, $sshUser, $host),
+            sprintf('ssh -i "%%~dp0%s" -p %d %s@%s', $keyFileName, $port, $sshUser, $host),
             'pause',
         ]);
 
