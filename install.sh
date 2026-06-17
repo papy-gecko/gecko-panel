@@ -368,7 +368,7 @@ success "Docker installé"
 
 # ── phpMyAdmin ──
 step "phpMyAdmin"
-PMA_VERSION=$(curl -fsSL https://api.github.com/repos/phpmyadmin/phpmyadmin/releases/latest | grep '"tag_name"' | sed 's/.*"\([^"]*\)".*/\1/') || PMA_VERSION="5.2.1"
+PMA_VERSION=$(curl -fsSL https://api.github.com/repos/phpmyadmin/phpmyadmin/releases/latest | grep '"tag_name"' | sed 's/.*"RELEASE_\([^"]*\)".*/\1/' | tr '_' '.') || PMA_VERSION="5.2.3"
 curl -fsSL "https://files.phpmyadmin.net/phpMyAdmin/${PMA_VERSION}/phpMyAdmin-${PMA_VERSION}-all-languages.tar.gz" \
     -o /tmp/pma.tar.gz
 tar -xzf /tmp/pma.tar.gz -C /var/www/
