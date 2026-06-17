@@ -223,6 +223,11 @@ echo "www-data ALL=(root) NOPASSWD: /usr/sbin/ufw" > /etc/sudoers.d/gecko-ufw
 chmod 440 /etc/sudoers.d/gecko-ufw
 visudo -cf /etc/sudoers.d/gecko-ufw || error "fichier sudoers invalide pour ufw"
 
+# Permet au panel (www-data) de démarrer Wings après avoir écrit son config.yml
+echo "www-data ALL=(root) NOPASSWD: /bin/systemctl start wings" > /etc/sudoers.d/gecko-wings-start
+chmod 440 /etc/sudoers.d/gecko-wings-start
+visudo -cf /etc/sudoers.d/gecko-wings-start || error "fichier sudoers invalide pour wings-start"
+
 # PHP-FPM tourne avec ProtectSystem=full (bac à sable systemd) : /etc est en
 # lecture seule pour ce service ET pour tout processus qu'il lance — y compris
 # via sudo, qui hérite du même espace de montage. Sans dérogation ciblée, le
@@ -454,6 +459,9 @@ success "GoTTY installé"
 # ── Wings ──
 step "Wings"
 mkdir -p /etc/pelican /var/lib/pelican/volumes
+# www-data (panel) doit pouvoir écrire config.yml après la création du node
+chown root:www-data /etc/pelican
+chmod 775 /etc/pelican
 curl -sSL -o /usr/local/bin/wings \
     https://github.com/pelican-dev/wings/releases/latest/download/wings_linux_amd64
 chmod +x /usr/local/bin/wings
@@ -503,6 +511,6 @@ echo -e "  ${BOLD}DB Name         :${NC} ${MYSQL_DB}"
 echo -e "  ${BOLD}DB User         :${NC} ${MYSQL_USER}"
 echo -e "  ${BOLD}DB Password     :${NC} ${MYSQL_PASS}"
 echo ""
-echo -e "  ${YELLOW}Une fois le panel configuré, ajoute un nœud Wings puis :${NC}"
-echo -e "  ${YELLOW}systemctl start wings${NC}"
+echo -e "  ${GREEN}Le nœud Wings sera configuré automatiquement à la fin de l'assistant.${NC}"
+echo -e "  ${GREEN}Wings démarrera tout seul une fois l'installation terminée.${NC}"
 echo ""

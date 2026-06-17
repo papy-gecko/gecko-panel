@@ -312,7 +312,7 @@ $userData['root_admin'] = true;
             $host = parse_url(config('app.url'), PHP_URL_HOST) ?: request()->getHost();
             $scheme = request()->isSecure() ? 'https' : 'http';
 
-            Node::create([
+            $node = Node::create([
                 'name'                => 'Main Node',
                 'fqdn'                => $host,
                 'scheme'              => $scheme,
@@ -331,10 +331,61 @@ $userData['root_admin'] = true;
                 'daemon_listen'       => 8080,
                 'daemon_connect'      => 8080,
             ]);
+
+            $this->writeWingsConfig($node);
         } catch (Exception $exception) {
             report($exception);
             // Non bloquant : le node peut être créé manuellement ensuite
         }
+    }
+
+    /**
+     * Écrit le fichier de configuration Wings (/etc/pelican/config.yml)
+     * directement après la création du node, évitant toute intervention SSH.
+     * install.sh s'assure que www-data peut écrire dans /etc/pelican/.
+     */
+    protected function writeWingsConfig(Node $node): void
+    {
+        $configPath = '/etc/pelican/config.yml';
+
+        if (!is_writable(dirname($configPath))) {
+            return;
+        }
+
+        $cfg = $node->getConfiguration();
+
+        // symfony/yaml n'est pas garanti disponible sans require explicite —
+        // on génère le YAML à la main pour éviter toute dépendance fragile.
+        $yaml = implode("\n", [
+            'debug: false',
+            "uuid: {$cfg['uuid']}",
+            "token_id: {$cfg['token_id']}",
+            "token: {$cfg['token']}",
+            'api:',
+            "  host: {$cfg['api']['host']}",
+            "  port: {$cfg['api']['port']}",
+            '  ssl:',
+            '    enabled: ' . ($cfg['api']['ssl']['enabled'] ? 'true' : 'false'),
+            "    cert: {$cfg['api']['ssl']['cert']}",
+            "    key: {$cfg['api']['ssl']['key']}",
+            "  upload_limit: {$cfg['api']['upload_limit']}",
+            'system:',
+            "  data: {$cfg['system']['data']}",
+            '  sftp:',
+            "    bind_port: {$cfg['system']['sftp']['bind_port']}",
+            'allowed_mounts: []',
+            "remote: {$cfg['remote']}",
+            '',
+        ]);
+
+        file_put_contents($configPath, $yaml);
+
+        // Démarrer Wings maintenant que le config est en place.
+        // On utilise sudo via le sudoers gecko-wings-start ajouté par install.sh.
+        // Pas bloquant : si sudo n'est pas dispo, Wings sera lancé au prochain boot.
+        $process = new Process(['sudo', 'systemctl', 'start', 'wings']);
+        $process->setTimeout(10);
+        $process->run();
     }
 
     /**
