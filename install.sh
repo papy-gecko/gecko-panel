@@ -70,6 +70,8 @@ ufw allow 80/tcp
 ufw allow 443/tcp
 ufw allow 8080/tcp
 ufw allow 40120/tcp
+# MySQL accessible uniquement depuis les conteneurs Docker (pelican_nw = 172.18.0.0/16)
+ufw allow from 172.18.0.0/16 to any port 3306 comment 'MySQL depuis Docker pelican_nw'
 ufw --force enable
 success "Système mis à jour"
 
