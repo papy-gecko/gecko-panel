@@ -98,6 +98,11 @@ mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DB}\`;"
 mysql -u root -e "CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_PASS}';"
 mysql -u root -e "ALTER USER '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_PASS}';"
 mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_USER}'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES;"
+# Les serveurs de jeu tournent dans des conteneurs Docker et se connectent à
+# MariaDB via le bridge Docker (172.18.0.1 par défaut). Par défaut MariaDB
+# n'écoute que sur 127.0.0.1 — on le fait écouter sur toutes les interfaces.
+sed -i 's/^bind-address\s*=.*/bind-address = 0.0.0.0/' /etc/mysql/mariadb.conf.d/50-server.cnf
+systemctl restart mariadb
 success "MySQL configuré"
 
 # ── Node.js ──
@@ -386,7 +391,15 @@ mv /var/www/phpMyAdmin-${PMA_VERSION}-all-languages /var/www/phpmyadmin
 rm -f /tmp/pma.tar.gz
 cp /var/www/phpmyadmin/config.sample.inc.php /var/www/phpmyadmin/config.inc.php
 SECRET=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 32)
-sed -i "s/\$cfg\['blowfish_secret'\] = ''/\$cfg['blowfish_secret'] = '${SECRET}'/" /var/www/phpmyadmin/config.inc.php
+# awk évite les problèmes d'échappement $ de sed avec les tableaux PHP
+awk -v secret="${SECRET}" '{
+    if ($0 ~ /blowfish_secret.*YOU MUST/) {
+        print "$cfg[\"blowfish_secret\"] = \"" secret "\";"
+    } else {
+        print
+    }
+}' /var/www/phpmyadmin/config.inc.php > /tmp/pma_config.php
+mv /tmp/pma_config.php /var/www/phpmyadmin/config.inc.php
 chown -R www-data:www-data /var/www/phpmyadmin
 # Insérer le bloc phpMyAdmin DANS le server block nginx (avant location /)
 # cat >> ajouterait après le } fermant — on utilise sed pour insérer avant
