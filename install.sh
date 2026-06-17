@@ -212,6 +212,10 @@ echo "www-data ALL=(root) NOPASSWD: /bin/bash" > /etc/sudoers.d/gecko-web-termin
 chmod 440 /etc/sudoers.d/gecko-web-terminal
 visudo -cf /etc/sudoers.d/gecko-web-terminal || error "fichier sudoers invalide pour le terminal web"
 
+echo "www-data ALL=(root) NOPASSWD: /usr/sbin/ufw" > /etc/sudoers.d/gecko-ufw
+chmod 440 /etc/sudoers.d/gecko-ufw
+visudo -cf /etc/sudoers.d/gecko-ufw || error "fichier sudoers invalide pour ufw"
+
 # PHP-FPM tourne avec ProtectSystem=full (bac à sable systemd) : /etc est en
 # lecture seule pour ce service ET pour tout processus qu'il lance — y compris
 # via sudo, qui hérite du même espace de montage. Sans dérogation ciblée, le
