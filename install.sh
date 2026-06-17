@@ -366,6 +366,37 @@ curl -fsSL https://get.docker.com | sh 2>/dev/null
 systemctl enable --now docker
 success "Docker installé"
 
+# ── phpMyAdmin ──
+step "phpMyAdmin"
+PMA_VERSION=$(curl -fsSL https://api.github.com/repos/phpmyadmin/phpmyadmin/releases/latest | grep '"tag_name"' | sed 's/.*"\([^"]*\)".*/\1/') || PMA_VERSION="5.2.1"
+curl -fsSL "https://files.phpmyadmin.net/phpMyAdmin/${PMA_VERSION}/phpMyAdmin-${PMA_VERSION}-all-languages.tar.gz" \
+    -o /tmp/pma.tar.gz
+tar -xzf /tmp/pma.tar.gz -C /var/www/
+mv /var/www/phpMyAdmin-${PMA_VERSION}-all-languages /var/www/phpmyadmin
+rm -f /tmp/pma.tar.gz
+cp /var/www/phpmyadmin/config.sample.inc.php /var/www/phpmyadmin/config.inc.php
+SECRET=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 32)
+sed -i "s/\$cfg\['blowfish_secret'\] = ''/\$cfg['blowfish_secret'] = '${SECRET}'/" /var/www/phpmyadmin/config.inc.php
+chown -R www-data:www-data /var/www/phpmyadmin
+# Ajouter le vhost phpMyAdmin dans nginx
+cat >> /etc/nginx/sites-available/gecko << PMAEOF
+
+    location /phpmyadmin {
+        root /var/www;
+        index index.php;
+        location ~ ^/phpmyadmin/(.+\.php)$ {
+            fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+            fastcgi_param SCRIPT_FILENAME /var/www/phpmyadmin/\$1;
+            include fastcgi_params;
+        }
+        location ~* ^/phpmyadmin/(.+\.(jpg|jpeg|gif|css|png|js|ico|html|xml|txt))$ {
+            root /var/www;
+        }
+    }
+PMAEOF
+nginx -t && systemctl reload nginx
+success "phpMyAdmin installé sur https://${DOMAIN}/phpmyadmin"
+
 # ── GoTTY ──
 step "GoTTY (terminal web PTY)"
 GOTTY_VERSION=$(curl -fsSL https://api.github.com/repos/sorenisanerd/gotty/releases/latest | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/') || GOTTY_VERSION="1.5.0"
